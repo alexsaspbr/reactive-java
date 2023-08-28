@@ -16,9 +16,13 @@ public class Main {
         Publisher publisher = new Publisher();
         ClientSubscriber clientSubscriber = new ClientSubscriber("Alex Araujo");
         ClientSubscriber clientSubscriber2 = new ClientSubscriber("Arthur");
+        ClientSubscriber clientSubscriber3 = new ClientSubscriber("Marcelo");
+        ClientSubscriber clientSubscriber4 = new ClientSubscriber("Thiane");
         LogSubscriber logSubscriber = new LogSubscriber();
         publisher.subscribe(clientSubscriber);
         publisher.subscribe(clientSubscriber2);
+        publisher.subscribe(clientSubscriber3);
+        publisher.subscribe(clientSubscriber4);
         publisher.subscribe(logSubscriber);
         Shop shop = new Shop(publisher);
         shop.sendPromotionMessages(messages);
