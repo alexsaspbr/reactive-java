@@ -4,40 +4,87 @@ import rx.Observable;
 import rx.Observer;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
+import rx.subjects.Subject;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
 
-        //Observable - [0...N]
-        //Single     - [0...1]
+/*        List<Integer> inteiros = List.of(1, 2, 3, 4, 5);
 
-        /*Single<String> olaMundo = Single.just("Ola mundo");
-        olaMundo = olaMundo.map(s -> s.concat(", Alex Araujo"));
-        olaMundo.subscribe(System.out::println);*/
+        //map - transformacao
+        List<Integer> novosInteiros = inteiros.stream().map(numero -> numero * numero).collect(Collectors.toList());
 
-   StringBuilder sb = new StringBuilder();
+        //filter - filtrar
+        inteiros.stream().filter(numero -> numero % 2 == 0).collect(Collectors.toList());
 
-        Observable<String> lettles = Observable.from(new String[]{"O", "a"});
-        //lettles = lettles.toBlocking();
-        lettles
-                .map(l -> l.toUpperCase())
-                //.observeOn(Schedulers.newThread())
-                .doOnCompleted(System.out::println)
-                .subscribe(emailSubscribe());
+        inteiros.stream().map(numero -> numero * numero)
+                         .filter(numero -> numero % 2 == 0)
+                         .collect(Collectors.toList());*/
 
-        System.out.println(sb.toString());
+        //exercicio 1
 
-        /*PublishSubject<String> publishSubject = PublishSubject.create();
-        //publishSubject.subscribeOn(Schedulers.newThread());
-        publishSubject.subscribe(emailSubscribe());
-        publishSubject.subscribe(logSubscriber());
-        //publishSubject.onNext("O");
-        //publishSubject.onNext("l");
-        //publishSubject.onNext("a");
-        //publishSubject.onNext(null);
-        publishSubject.onCompleted();*/
+        /*Observable
+                .range(1, 10000)
+                .map(n -> n * n)
+                .filter(n -> n % 2 == 0)
+                .subscribe(new Observer<Integer>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        System.out.printf("Numero %d", integer);
+                    }
+                });
+*/
+        //exercicio 2
+
+        Observable<String> observable = Observable
+                                            .just("ana", "alex", "arara", "thiane");
+        /*observable
+                .subscribe(Main::palindromo);*/
+        
+        observable
+                .map(palavra -> {
+
+                    StringBuilder palavraInvertida = new StringBuilder();
+
+                    for (int i = palavra.length() -1; i >= 0 ; i--) {
+                        palavraInvertida.append(palavra.charAt(i));
+                    }
+
+                    if (palavra.equalsIgnoreCase(palavraInvertida.toString())){
+                        return String.format("%s é palindromo\n", palavra).toUpperCase();
+                    } else {
+                        return String.format("%s não é palindromo\n", palavra).toUpperCase();
+                    }
+
+                })
+                .subscribe(System.out::print);
+    }
+
+    public static void palindromo(String palavra){
+        StringBuilder palavraInvertida = new StringBuilder();
+        for(int i = palavra.length() - 1; i >= 0; i--) {
+            palavraInvertida.append(palavra.charAt(i));
+        }
+
+        if (palavra.equalsIgnoreCase(palavraInvertida.toString())){
+            System.out.printf("%s é palindromo\n", palavra);
+        } else {
+            System.out.printf("%s não é palindromo\n", palavra);
+        }
 
     }
 
