@@ -1,59 +1,32 @@
 package br.com.ada;
 
-import rx.Observable;
-import rx.Observer;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
-import rx.subjects.Subject;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class Main {
     public static void main(String[] args) {
 
-/*        List<Integer> inteiros = List.of(1, 2, 3, 4, 5);
+        //Observable [0...N] -> Flux
+        //Single     [0...1] -> Mono
 
-        //map - transformacao
-        List<Integer> novosInteiros = inteiros.stream().map(numero -> numero * numero).collect(Collectors.toList());
-
-        //filter - filtrar
-        inteiros.stream().filter(numero -> numero % 2 == 0).collect(Collectors.toList());
-
-        inteiros.stream().map(numero -> numero * numero)
-                         .filter(numero -> numero % 2 == 0)
-                         .collect(Collectors.toList());*/
 
         //exercicio 1
 
-        /*Observable
+        /*Flux
                 .range(1, 10000)
                 .map(n -> n * n)
                 .filter(n -> n % 2 == 0)
-                .subscribe(new Observer<Integer>() {
-                    @Override
-                    public void onCompleted() {
+                .subscribe(System.out::println);*/
 
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-
-                    }
-
-                    @Override
-                    public void onNext(Integer integer) {
-                        System.out.printf("Numero %d", integer);
-                    }
-                });
-*/
         //exercicio 2
 
-        Observable<String> observable = Observable
+       /* Flux<String> observable = Flux
                                             .just("ana", "alex", "arara", "thiane");
-        /*observable
-                .subscribe(Main::palindromo);*/
+        observable
+                .subscribe(Main::palindromo);
         
         observable
                 .map(palavra -> {
@@ -71,7 +44,82 @@ public class Main {
                     }
 
                 })
-                .subscribe(System.out::print);
+                .subscribe(System.out::print);*/
+
+
+        Flux<Integer> flux = Flux
+                .range(1, 100);
+        /*
+        flux.subscribe(new Subscriber<Integer>() {
+                    @Override
+                    public void onSubscribe(Subscription subscription) {
+
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+
+        flux.subscribe(next -> System.out.println(next), //OnNext
+                       error -> System.err.println(error), //OnError
+                       complete -> System.out.println(complete)); //OnCompleted
+
+
+        Flux.generate(
+                () -> 0, (state, sink) -> {
+                    sink.next(state);
+                    if (state == 100)
+                        sink.complete();
+                    return state + 1;
+                })
+                .subscribe(System.out::println);
+
+        Mono<String> mono = Mono.just("Alex");
+        mono
+                .log()
+                .map(String::toUpperCase)
+                .subscribe(System.out::println);*/
+
+        flux = flux
+                //.log()
+                .map(n -> {
+                    System.out.println("Por 2");
+                    System.out.println("Thread: " + Thread.currentThread().getName());
+                    return n * 2;
+                })
+                //.publishOn(Schedulers.newParallel("paralelo", 4))
+                .map(n -> {
+                    System.out.println("Por 3");
+                    System.out.println("Thread: " + Thread.currentThread().getName());
+                    return n * 3;
+                })
+                //.publishOn(Schedulers.newParallel("paralelo", 4))
+                .map(n -> {
+                    System.out.println("Por 4");
+                    System.out.println("Thread: " + Thread.currentThread().getName());
+                    return n * 4;
+                })
+                .subscribeOn(Schedulers.newParallel("paralelo", 4));
+
+                flux.subscribe(s -> {
+                    System.out.println("Dado: " + s);
+                    System.out.println("Thread: " + Thread.currentThread().getName());
+                });
+
+
     }
 
     public static void palindromo(String palavra){
@@ -86,62 +134,5 @@ public class Main {
             System.out.printf("%s não é palindromo\n", palavra);
         }
 
-    }
-
-    private static Observer<String> emailSubscribe() {
-
-        StringBuilder sb = new StringBuilder();
-
-        return new Observer<String>() {
-            @Override
-            public void onCompleted() {
-                System.out.printf("\nEnviando e-mails para clientes %s \n", sb.toString());
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                System.err.printf("\nOcorreu um erro %s", throwable.getMessage());
-            }
-
-            @Override
-            public void onNext(String s) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-                //System.out.println(Thread.currentThread().getName());
-                if(!"l".equalsIgnoreCase(s)) {
-                    System.out.println(s);
-                    sb.append(s);
-                } else {
-                    throw new NullPointerException();
-                }
-            }
-        };
-    }
-
-    private static Observer<String> logSubscriber() {
-        return new Observer<String>() {
-            @Override
-            public void onCompleted() {
-                System.out.println("Enviando logs para Elasticsearch");
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                System.err.printf("\nOcorreu um erro %s", throwable.getMessage());
-            }
-
-            @Override
-            public void onNext(String s) {
-                //System.out.println(Thread.currentThread().getName());
-                if(Objects.nonNull(s)) {
-                    System.out.println(s + " Second Observer\n");
-                } else {
-                    throw new NullPointerException();
-                }
-            }
-        };
     }
 }
