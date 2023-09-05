@@ -1,138 +1,79 @@
 package br.com.ada;
 
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
 
-        //Observable [0...N] -> Flux
-        //Single     [0...1] -> Mono
+        long start = System.currentTimeMillis();
+
+        //withScanner();
+        //withFlux();
 
 
-        //exercicio 1
+        ConnectableFlux<Object> connectableFlux = ConnectableFlux.create(cf -> {
+            while(true){
+                cf.next(System.currentTimeMillis());
+            }
+        }).publish();
 
-        /*Flux
-                .range(1, 10000)
-                .map(n -> n * n)
-                .filter(n -> n % 2 == 0)
-                .subscribe(System.out::println);*/
+        connectableFlux.subscribe(s -> System.out.println("Sub1 " + s));
+        connectableFlux.subscribe(s -> System.out.println("Sub2 " + s));
+        //connectableFlux.connect();
 
-        //exercicio 2
+        Flux<String> flux = Flux.just("Mensagem 1");
+        flux.subscribe(s -> System.out.println("Sub1 " + s));
+        flux = flux.just("Mensagem 2");
+        flux.subscribe(s -> System.out.println("Sub1 " + s));
+        flux.subscribe(s -> System.out.println("Sub2 " + s));
 
-       /* Flux<String> observable = Flux
-                                            .just("ana", "alex", "arara", "thiane");
-        observable
-                .subscribe(Main::palindromo);
-        
-        observable
-                .map(palavra -> {
+        double end = (System.currentTimeMillis() - start) / 1000.0;
 
-                    StringBuilder palavraInvertida = new StringBuilder();
-
-                    for (int i = palavra.length() -1; i >= 0 ; i--) {
-                        palavraInvertida.append(palavra.charAt(i));
-                    }
-
-                    if (palavra.equalsIgnoreCase(palavraInvertida.toString())){
-                        return String.format("%s é palindromo\n", palavra).toUpperCase();
-                    } else {
-                        return String.format("%s não é palindromo\n", palavra).toUpperCase();
-                    }
-
-                })
-                .subscribe(System.out::print);*/
-
-
-        Flux<Integer> flux = Flux
-                .range(1, 100);
-        /*
-        flux.subscribe(new Subscriber<Integer>() {
-                    @Override
-                    public void onSubscribe(Subscription subscription) {
-
-                    }
-
-                    @Override
-                    public void onNext(Integer integer) {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-
-
-        flux.subscribe(next -> System.out.println(next), //OnNext
-                       error -> System.err.println(error), //OnError
-                       complete -> System.out.println(complete)); //OnCompleted
-
-
-        Flux.generate(
-                () -> 0, (state, sink) -> {
-                    sink.next(state);
-                    if (state == 100)
-                        sink.complete();
-                    return state + 1;
-                })
-                .subscribe(System.out::println);
-
-        Mono<String> mono = Mono.just("Alex");
-        mono
-                .log()
-                .map(String::toUpperCase)
-                .subscribe(System.out::println);*/
-
-        flux = flux
-                //.log()
-                .map(n -> {
-                    System.out.println("Por 2");
-                    System.out.println("Thread: " + Thread.currentThread().getName());
-                    return n * 2;
-                })
-                //.publishOn(Schedulers.newParallel("paralelo", 4))
-                .map(n -> {
-                    System.out.println("Por 3");
-                    System.out.println("Thread: " + Thread.currentThread().getName());
-                    return n * 3;
-                })
-                //.publishOn(Schedulers.newParallel("paralelo", 4))
-                .map(n -> {
-                    System.out.println("Por 4");
-                    System.out.println("Thread: " + Thread.currentThread().getName());
-                    return n * 4;
-                })
-                .subscribeOn(Schedulers.newParallel("paralelo", 4));
-
-                flux.subscribe(s -> {
-                    System.out.println("Dado: " + s);
-                    System.out.println("Thread: " + Thread.currentThread().getName());
-                });
-
+        System.out.printf("\n\n Tempo médio %.2f \n", end);
 
     }
 
-    public static void palindromo(String palavra){
-        StringBuilder palavraInvertida = new StringBuilder();
-        for(int i = palavra.length() - 1; i >= 0; i--) {
-            palavraInvertida.append(palavra.charAt(i));
-        }
+    public static void withFlux(){
+        Flux<String> flux = Flux.using(() -> new FileReader("/home/alexaraujo/ada/1012/reactive-java/dados.txt"),
+                reader -> Flux.fromStream(new BufferedReader(reader).lines()),
+                reader -> {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-        if (palavra.equalsIgnoreCase(palavraInvertida.toString())){
-            System.out.printf("%s é palindromo\n", palavra);
-        } else {
-            System.out.printf("%s não é palindromo\n", palavra);
+        flux.log()
+                .parallel(8)
+                .runOn(Schedulers.parallel());
+                //.sequential()
+                //.subscribe(System.out::println);
+
+    }
+
+    public static void withScanner(){
+        Scanner scanner = null;
+        try {
+            scanner = new Scanner(new File("/home/alexaraujo/ada/1012/reactive-java/dados.txt"));
+            List<String> linhas = new ArrayList<>();
+
+            while(scanner.hasNext()) {
+                System.out.println(scanner.next());
+            }
+
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
         }
 
     }
+
 }
